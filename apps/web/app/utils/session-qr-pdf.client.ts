@@ -45,15 +45,18 @@ export async function openQrPdf(pages: QrPrintPage[]): Promise<void> {
 }
 
 function renderTrackPage(doc: PdfDocument, title: string): void {
-  doc.setFillColor(23, 32, 25);
+  doc.setFillColor(242, 237, 223);
   doc.rect(0, 0, 210, 297, "F");
-  doc.setTextColor(242, 237, 223);
+  doc.setTextColor(23, 32, 25);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
   doc.text("METAPHORUM 2026  /  TRACK", 24, 35);
+  doc.setFillColor(23, 32, 25);
+  doc.rect(20, 88, 170, 88, "F");
+  doc.setTextColor(242, 237, 223);
   doc.setFont("times", "bold");
   doc.setFontSize(34);
-  doc.text(doc.splitTextToSize(title, 162), 24, 105);
+  doc.text(doc.splitTextToSize(title, 152).slice(0, 4), 29, 113);
 }
 
 function renderSessionPage(doc: PdfDocument, value: QrSession, qr: string): void {

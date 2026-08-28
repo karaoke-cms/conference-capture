@@ -31,3 +31,21 @@ test("renders every planned page and places a large QR in the lower third", asyn
   expect(Number(image?.args[3])).toBeGreaterThanOrEqual(190);
   expect(image?.args.slice(4, 6)).toEqual([90, 90]);
 });
+
+test("renders track dividers on white with black only behind the track title", async () => {
+  const calls: Array<{ name: string; args: unknown[] }> = [];
+  const document = {
+    addPage: () => {}, setFillColor: (...args: unknown[]) => calls.push({ name: "fill", args }),
+    rect: (...args: unknown[]) => calls.push({ name: "rect", args }), setTextColor: () => {}, setFont: () => {},
+    setFontSize: () => {}, text: () => {}, splitTextToSize: (text: string) => [text], addImage: () => {},
+    output: () => new Blob(["pdf"], { type: "application/pdf" }),
+  };
+  const track: Track = { id: "t1", conferenceId: "c1", title: "Systems Track", order: 1 };
+
+  await renderQrPdf([{ type: "track", track }], { createDocument: () => document });
+
+  expect(calls).toContainEqual({ name: "fill", args: [242, 237, 223] });
+  expect(calls).toContainEqual({ name: "rect", args: [0, 0, 210, 297, "F"] });
+  expect(calls).toContainEqual({ name: "fill", args: [23, 32, 25] });
+  expect(calls).toContainEqual({ name: "rect", args: [20, 88, 170, 88, "F"] });
+});
