@@ -1,0 +1,9 @@
+.worktrees/
+node_modules/
+.env
+.data/
+.output/
+.nuxt/
+dist/
+coverage/
+uploads/
