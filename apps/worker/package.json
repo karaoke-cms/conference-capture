@@ -1,0 +1,19 @@
+{
+  "name": "@conference/worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "once": "bun src/index.ts --once",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "build": "bun build src/index.ts --outdir dist --target bun"
+  },
+  "dependencies": {
+    "@conference/ai": "workspace:*",
+    "@conference/contracts": "workspace:*",
+    "@conference/database": "workspace:*",
+    "@conference/domain": "workspace:*"
+  }
+}

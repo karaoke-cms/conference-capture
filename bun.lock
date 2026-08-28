@@ -25,6 +25,15 @@
         "zod": "^4.4.3",
       },
     },
+    "apps/worker": {
+      "name": "@conference/worker",
+      "dependencies": {
+        "@conference/ai": "workspace:*",
+        "@conference/contracts": "workspace:*",
+        "@conference/database": "workspace:*",
+        "@conference/domain": "workspace:*",
+      },
+    },
     "packages/ai": {
       "name": "@conference/ai",
       "dependencies": {
@@ -110,6 +119,8 @@
     "@conference/domain": ["@conference/domain@workspace:packages/domain"],
 
     "@conference/storage": ["@conference/storage@workspace:packages/storage"],
+
+    "@conference/worker": ["@conference/worker@workspace:apps/worker"],
 
     "@smithy/core": ["@smithy/core@3.33.3", "https://npm.tautai.tech/@smithy/core/-/core-3.33.3.tgz", { "dependencies": { "@smithy/types": "^4.17.2", "tslib": "^2.6.2" } }, "sha512-CsOeKq/9kA3y6VJHt+/+VTCtBaxJ4OTFpgrjIUhPpDIKxBci1k2bJaQASF2h/ELWrulGp+t97DZ0mevfAD8idg=="],
 
