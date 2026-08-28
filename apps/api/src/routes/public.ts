@@ -7,6 +7,7 @@ import { problem } from "../errors";
 export function registerPublicRoutes(app: Hono, dependencies: ApiDependencies) {
   const { repository, storage, config } = dependencies;
   app.get("/health", (c) => c.json({ status: "ok" }));
+  app.get("/api/sessions", (c) => c.json(repository.listHierarchy()));
   app.get("/api/sessions/:slug", (c) => {
     const context = repository.getSessionContext(c.req.param("slug"));
     return context ? c.json(context) : problem(c, 404, "session_not_found", "Session not found.");

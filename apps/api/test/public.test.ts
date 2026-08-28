@@ -6,6 +6,20 @@ let repository: ConferenceRepository | undefined;
 afterEach(() => repository?.close());
 
 describe("public API", () => {
+  test("returns public programme hierarchy without organizer data", async () => {
+    const value = fixture(); repository = value.repository;
+    const response = await value.app.request("/api/sessions");
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.conferences).toHaveLength(1);
+    expect(body.tracks).toHaveLength(1);
+    expect(body.sessions[0]?.slug).toBe("ai-and-vsm");
+    expect(body.contributions).toBeUndefined();
+    expect(body.syntheses).toBeUndefined();
+    expect(body.jobs).toBeUndefined();
+  });
+
   test("returns health and session context", async () => {
     const value = fixture(); repository = value.repository;
     expect((await value.app.request("/health")).status).toBe(200);
