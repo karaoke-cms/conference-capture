@@ -36,7 +36,7 @@ describe("conference contracts", () => {
   });
 
   test("supports all recursive scopes", () => {
-    for (const scope of ["session", "track", "conference"]) {
+    for (const scope of ["session", "track", "conference"] as const) {
       expect(scopeSchema.parse(scope)).toBe(scope);
     }
   });
