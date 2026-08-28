@@ -8,6 +8,8 @@
     "test": "bun test",
     "typecheck": "bun run --filter '*' typecheck",
     "build": "bun run --filter '*' build",
+    "dev": "bun scripts/dev.ts",
+    "stop": "bun scripts/stop-dev.ts",
     "seed": "bun scripts/seed.ts",
     "import:metaphorum": "bun scripts/import-metaphorum.ts",
     "scheduler": "bun scripts/scheduler.ts",
