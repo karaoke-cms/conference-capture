@@ -87,6 +87,8 @@ Open:
 - Organizer dashboard: http://localhost:3000/organizer
 - API health: http://localhost:8787/health
 
+In the organizer dashboard, select sessions under **Session QR codes**, choose alphabetical, time, or track sorting, and use **Print selected** to open an A4 PDF in a new tab. Track sorting adds divider pages when the selection spans multiple tracks.
+
 The sample organizer token is the value of `ORGANIZER_TOKEN` in `.env`. Change both organizer and cron secrets before exposing the application to a network.
 
 The default local setup uses:

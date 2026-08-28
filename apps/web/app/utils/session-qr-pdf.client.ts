@@ -1,6 +1,6 @@
 import { jsPDF } from "jspdf";
 import QRCode from "qrcode";
-import type { QrPrintPage } from "./session-qr-print";
+import type { QrPrintPage, QrSession } from "./session-qr-print";
 
 interface PdfDocument {
   addPage(): unknown;
@@ -26,7 +26,7 @@ export async function renderQrPdf(pages: QrPrintPage[], dependencies: {
   for (const [index, page] of pages.entries()) {
     if (index > 0) doc.addPage();
     if (page.type === "track") renderTrackPage(doc, page.track.title);
-    else await renderSessionPage(doc, page.session, await qrDataUrl(page.session.url));
+    else renderSessionPage(doc, page.session, await qrDataUrl(page.session.url));
   }
   return doc.output("blob");
 }
@@ -56,8 +56,7 @@ function renderTrackPage(doc: PdfDocument, title: string): void {
   doc.text(doc.splitTextToSize(title, 162), 24, 105);
 }
 
-async function renderSessionPage(doc: PdfDocument, session: QrPrintPage & any, qr: string): Promise<void> {
-  const value = session.session ?? session;
+function renderSessionPage(doc: PdfDocument, value: QrSession, qr: string): void {
   doc.setFillColor(242, 237, 223);
   doc.rect(0, 0, 210, 297, "F");
   doc.setTextColor(23, 32, 25);
@@ -73,5 +72,5 @@ async function renderSessionPage(doc: PdfDocument, session: QrPrintPage & any, q
   doc.setFontSize(8);
   doc.setTextColor(47, 96, 72);
   doc.text(value.startsAt ? new Date(value.startsAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : "Schedule to be confirmed", 20, 137);
-  doc.addImage(qr, "PNG", 60, 197, 90, 90);
+  doc.addImage(qr, "PNG", 60, 197, 90, 90, undefined, "FAST");
 }
