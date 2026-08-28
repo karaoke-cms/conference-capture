@@ -1,0 +1,11 @@
+{
+  "name": "@conference/storage",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "test": "bun test", "typecheck": "tsc --noEmit", "build": "tsc --noEmit" },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.890.0",
+    "@aws-sdk/s3-request-presigner": "^3.890.0"
+  }
+}
