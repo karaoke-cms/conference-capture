@@ -77,7 +77,7 @@ const questions = computed(() => conferenceSynthesis.value?.questions ?? []);
 
       <section>
         <div class="section-heading"><p class="eyebrow">Participant access</p><h2 class="display">Session QR codes</h2></div>
-        <div class="qr-grid"><SessionQr v-for="session in dashboard.sessions" :key="session.id" :slug="session.slug" :title="session.title" /></div>
+        <SessionQrPrintList :sessions="dashboard.sessions" :tracks="dashboard.tracks" />
       </section>
     </template>
   </main>
@@ -104,7 +104,6 @@ h2 { max-width: 14ch; margin: 0; font-size: clamp(2.4rem, 6vw, 5.5rem); line-hei
 .contributions { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: .8rem; }
 .scope-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 27rem), 1fr)); gap: .8rem; }
 .world-cafe { padding-bottom: 1rem; }
-.qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: .7rem; }
 .empty { padding: 2rem; border: 1px dashed var(--rule); color: var(--muted); }
 .banner { position: sticky; z-index: 3; top: 3.5rem; padding: .8rem; color: white; background: #9b2412; }
 @media (max-width: 34rem) { .masthead { grid-template-columns: auto 1fr; } .masthead > button { grid-column: 1 / -1; } .section-heading { grid-template-columns: 1fr; } }
