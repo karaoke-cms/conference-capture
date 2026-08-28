@@ -11,5 +11,6 @@ test("selects three or four distinct question perspectives", () => {
   ]);
   expect(result).toHaveLength(4);
   expect(result).toContain("Which tension most needs attention?");
-  expect(result).not.toContain("Another action?");
+  expect(result).toContain("Another action?");
+  expect(result).not.toContain("What will we do differently?");
 });
