@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { readFile } from "node:fs/promises";
 import { contributionGroups, latestSynthesis, qrUrl, sentimentPercentages } from "../app/utils/dashboard";
 
 describe("organizer dashboard view model", () => {
@@ -22,4 +23,14 @@ describe("organizer dashboard view model", () => {
   test("constructs a public session URL for QR encoding", () => {
     expect(qrUrl("https://capture.example/", "ai-and-vsm")).toBe("https://capture.example/session/ai-and-vsm");
   });
+});
+
+test("uses the selectable QR print list instead of individual QR cards", async () => {
+  const dashboard = await readFile(new URL("../app/pages/organizer/index.vue", import.meta.url), "utf8");
+  const printList = await readFile(new URL("../app/components/SessionQrPrintList.vue", import.meta.url), "utf8");
+
+  expect(dashboard).toContain("<SessionQrPrintList");
+  expect(printList.match(/>All</g)).toHaveLength(2);
+  expect(printList).toContain("Print selected");
+  expect(printList).toContain(":indeterminate=\"isPartial\"");
 });
