@@ -64,8 +64,8 @@ export interface Session {
   slug: string;
   title: string;
   description: string;
-  startsAt: string;
-  endsAt: string;
+  startsAt?: string;
+  endsAt?: string;
 }
 
 export interface Contribution {

@@ -50,4 +50,29 @@ describe("conference repository", () => {
     expect(repository.latestSynthesis("session", "s1")?.sourceContributionIds).toEqual(["a", "b"]);
     expect(synthesis.generatedAt).toMatch(/^\d{4}-/);
   });
+
+  test("upserts unscheduled programme records and updates source changes", () => {
+    repository = createSqliteRepository(":memory:");
+    repository.createConference({ id: "c1", slug: "m", title: "M", description: "", startsAt: "2026-09-17T08:00:00Z", endsAt: "2026-09-19T17:00:00Z" });
+    repository.upsertTrack({ id: "source:t1", conferenceId: "c1", title: "Original", order: 1 });
+    repository.upsertTrack({ id: "source:t1", conferenceId: "c1", title: "Updated", order: 2 });
+    repository.upsertSession({ id: "source:s1", trackId: "source:t1", slug: "source-session", title: "Original", description: "Draft" });
+    repository.upsertSession({ id: "source:s1", trackId: "source:t1", slug: "source-session", title: "Updated", description: "Final" });
+    const hierarchy = repository.listHierarchy();
+    expect(hierarchy.tracks).toHaveLength(1);
+    expect(hierarchy.tracks[0]?.title).toBe("Updated");
+    expect(hierarchy.sessions[0]?.title).toBe("Updated");
+    expect(hierarchy.sessions[0]?.startsAt).toBeUndefined();
+  });
+
+  test("removes only demo sessions without contributions", () => {
+    repository = createSqliteRepository(":memory:");
+    repository.createConference({ id: "c1", slug: "m", title: "M", description: "", startsAt: "2026-09-17T08:00:00Z", endsAt: "2026-09-19T17:00:00Z" });
+    repository.createTrack({ id: "demo-track", conferenceId: "c1", title: "Demo", order: 1 });
+    repository.createSession({ id: "empty-demo", trackId: "demo-track", slug: "empty", title: "Empty", description: "" });
+    repository.createSession({ id: "used-demo", trackId: "demo-track", slug: "used", title: "Used", description: "" });
+    repository.createContribution({ sessionId: "used-demo", caption: "Keep this", type: "insight", signal: "curious" });
+    expect(repository.removeSessionsWithoutContributions(["empty-demo", "used-demo"])).toBe(1);
+    expect(repository.listHierarchy().sessions.map((session) => session.id)).toEqual(["used-demo"]);
+  });
 });

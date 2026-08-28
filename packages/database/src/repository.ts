@@ -9,6 +9,11 @@ export interface ConferenceRepository {
   createConference(value: Conference): Conference;
   createTrack(value: Track): Track;
   createSession(value: Session): Session;
+  upsertConference(value: Conference): Conference;
+  upsertTrack(value: Track): Track;
+  upsertSession(value: Session): Session;
+  removeSessionsWithoutContributions(ids: readonly string[]): number;
+  removeTracksWithoutSessions(ids: readonly string[]): number;
   getSessionContext(slug: string): SessionContext | undefined;
   listHierarchy(): { conferences: Conference[]; tracks: Track[]; sessions: Session[] };
   createContribution(value: ContributionInput & { mediaUrl?: string; mediaKey?: string }): Contribution;

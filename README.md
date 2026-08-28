@@ -94,9 +94,20 @@ bun test                 # all automated and smoke tests
 bun run typecheck        # strict checks across every package/service
 bun run build            # production builds
 bun run seed             # idempotently add sample conference data
+bun run import:metaphorum # import the current Metaphorum programme
 bun run worker:once      # process one queued job
 bun run scheduler        # invoke one protected scheduling tick
 ```
+
+### Import the Metaphorum programme
+
+```bash
+bun run import:metaphorum
+# Or import from another checkout:
+bun run import:metaphorum --source /path/to/metaphorum
+```
+
+The default source is `/Users/mathis/dev/metaphorum/metaphorum`. The import is idempotent: conferences, tracks, and sessions use namespaced source IDs and stable session slugs, so running it again updates existing records instead of creating duplicates. Talks without a matching schedule entry remain explicitly unscheduled and appear as “Schedule to be confirmed”. The two original demo sessions are removed only when they have no participant contributions.
 
 ## Environment variables
 
