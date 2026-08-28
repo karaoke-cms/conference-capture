@@ -1,10 +1,26 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createSqliteRepository, type ConferenceRepository } from "../src";
 
 let repository: ConferenceRepository | undefined;
 afterEach(() => repository?.close());
 
 describe("conference repository", () => {
+  test("creates a missing parent directory for a file database", () => {
+    const root = mkdtempSync(join(tmpdir(), "conference-repository-"));
+    const path = join(root, "nested", "conference.db");
+    try {
+      repository = createSqliteRepository(path);
+      expect(repository.listHierarchy().conferences).toEqual([]);
+    } finally {
+      repository?.close();
+      repository = undefined;
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("stores hierarchy and resolves a public session slug", () => {
     repository = createSqliteRepository(":memory:");
     repository.createConference({ id: "c1", slug: "metaphorum", title: "Metaphorum 2026", description: "Living conversation", startsAt: "2026-09-17T08:00:00Z", endsAt: "2026-09-19T17:00:00Z" });

@@ -1,4 +1,6 @@
 import { Database } from "bun:sqlite";
+import { mkdirSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import type { Conference, Contribution, ContributionInput, ProcessingJob, ScopeType, Session, Synthesis, Track } from "@conference/contracts";
 import type { ConferenceRepository, SessionContext, SynthesisInput } from "./repository";
 import { sqliteSchema } from "./schema";
@@ -8,6 +10,7 @@ const now = () => new Date().toISOString();
 const parse = <T>(value: string | null | undefined, fallback: T): T => value ? JSON.parse(value) as T : fallback;
 
 export function createSqliteRepository(path: string): ConferenceRepository {
+  if (path !== ":memory:") mkdirSync(dirname(resolve(path)), { recursive: true });
   const db = new Database(path, { create: true });
   db.exec("PRAGMA foreign_keys = ON;");
   db.exec("PRAGMA journal_mode = WAL;");
