@@ -11,6 +11,7 @@ export function registerSchedulerRoutes(app: Hono, dependencies: ApiDependencies
     const existing = new Set(repository.listJobs().map((job) => `${job.type}:${job.scopeId}`));
     const jobs = [];
     for (const session of hierarchy.sessions) {
+      if (!session.endsAt) continue;
       const due = new Date(session.endsAt).getTime() + 10 * 60_000 <= now.getTime();
       const key = `synthesize-session:${session.id}`;
       if (due && !existing.has(key)) jobs.push(repository.enqueueJob({ type: "synthesize-session", scopeId: session.id }));

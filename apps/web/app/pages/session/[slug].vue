@@ -5,7 +5,9 @@ const config = useRuntimeConfig();
 const { data, error } = await useFetch<{ conference: Conference; track: Track; session: Session }>(`${config.public.apiBase}/api/sessions/${route.params.slug}`);
 if (error.value) throw createError({ statusCode: 404, statusMessage: "Session not found" });
 useHead({ title: () => data.value ? `${data.value.session.title} · Metaphorum 2026` : "Session" });
-const time = computed(() => data.value ? new Intl.DateTimeFormat("en-GB", { weekday: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(data.value.session.startsAt)) : "");
+const time = computed(() => data.value?.session.startsAt
+  ? new Intl.DateTimeFormat("en-GB", { weekday: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(data.value.session.startsAt))
+  : "Schedule to be confirmed");
 </script>
 <template>
   <main v-if="data">
