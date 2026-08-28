@@ -20,6 +20,14 @@
         "zod": "^4.1.5",
       },
     },
+    "packages/database": {
+      "name": "@conference/database",
+      "dependencies": {
+        "@conference/contracts": "workspace:*",
+        "drizzle-orm": "^0.44.7",
+        "postgres": "^3.4.9",
+      },
+    },
     "packages/domain": {
       "name": "@conference/domain",
       "dependencies": {
@@ -29,6 +37,8 @@
   },
   "packages": {
     "@conference/contracts": ["@conference/contracts@workspace:packages/contracts"],
+
+    "@conference/database": ["@conference/database@workspace:packages/database"],
 
     "@conference/domain": ["@conference/domain@workspace:packages/domain"],
 

@@ -1,0 +1,12 @@
+{
+  "name": "@conference/database",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "test": "bun test", "typecheck": "tsc --noEmit", "build": "tsc --noEmit" },
+  "dependencies": {
+    "@conference/contracts": "workspace:*",
+    "drizzle-orm": "^0.44.7",
+    "postgres": "^3.4.9"
+  }
+}
