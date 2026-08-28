@@ -82,6 +82,7 @@ bun run dev:web
 
 Open:
 
+- Public session directory: http://localhost:3000/sessions
 - Participant example: http://localhost:3000/session/opensoma-a-decolonial-cybernetic-agent-talk1
 - Organizer dashboard: http://localhost:3000/organizer
 - API health: http://localhost:8787/health
