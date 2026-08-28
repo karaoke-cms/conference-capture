@@ -60,7 +60,19 @@ bun install
 bun run seed
 ```
 
-Start the three services in separate terminals:
+Start all three services in one attached terminal:
+
+```bash
+bun run dev
+```
+
+The command restarts any development services from an earlier managed run and combines their logs. Press Ctrl+C to stop all three, or stop them from another terminal with:
+
+```bash
+bun run stop
+```
+
+For troubleshooting, the services can still be started separately:
 
 ```bash
 bun run dev:api
@@ -70,7 +82,7 @@ bun run dev:web
 
 Open:
 
-- Participant example: http://localhost:3000/session/ai-and-vsm
+- Participant example: http://localhost:3000/session/opensoma-a-decolonial-cybernetic-agent-talk1
 - Organizer dashboard: http://localhost:3000/organizer
 - API health: http://localhost:8787/health
 
@@ -93,6 +105,8 @@ No external credentials are required.
 bun test                 # all automated and smoke tests
 bun run typecheck        # strict checks across every package/service
 bun run build            # production builds
+bun run dev              # restart API, worker, and web; show combined logs
+bun run stop             # stop all managed development services
 bun run seed             # idempotently add sample conference data
 bun run import:metaphorum # import the current Metaphorum programme
 bun run worker:once      # process one queued job
