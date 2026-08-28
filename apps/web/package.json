@@ -1,0 +1,23 @@
+{
+  "name": "@conference/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "test": "bun test --pass-with-no-tests",
+    "typecheck": "nuxt typecheck",
+    "build": "nuxt build"
+  },
+  "dependencies": {
+    "@conference/contracts": "workspace:*",
+    "nuxt": "^4.0.0",
+    "qrcode": "^1.5.4",
+    "vue": "^3.5.0",
+    "vue-router": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.5",
+    "typescript": "^5.9.0",
+    "vue-tsc": "^3.0.0"
+  }
+}
