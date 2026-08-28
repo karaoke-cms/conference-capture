@@ -11,10 +11,10 @@
     "seed": "bun scripts/seed.ts",
     "import:metaphorum": "bun scripts/import-metaphorum.ts",
     "scheduler": "bun scripts/scheduler.ts",
-    "dev:api": "bun run --filter '@conference/api' dev",
+    "dev:api": "bun --watch apps/api/src/index.ts",
     "dev:web": "bun run --filter '@conference/web' dev",
-    "dev:worker": "bun run --filter '@conference/worker' dev",
-    "worker:once": "bun run --filter '@conference/worker' once"
+    "dev:worker": "bun --watch apps/worker/src/index.ts",
+    "worker:once": "bun apps/worker/src/index.ts --once"
   },
   "dependencies": {
     "drizzle-orm": "^0.44.5",
