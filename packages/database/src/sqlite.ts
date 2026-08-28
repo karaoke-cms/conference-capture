@@ -27,8 +27,36 @@ export function createSqliteRepository(path: string): ConferenceRepository {
       return value;
     },
     createSession(value) {
-      db.query("INSERT INTO sessions VALUES (?, ?, ?, ?, ?, ?, ?)").run(value.id, value.trackId, value.slug, value.title, value.description, value.startsAt, value.endsAt);
+      db.query("INSERT INTO sessions VALUES (?, ?, ?, ?, ?, ?, ?)").run(value.id, value.trackId, value.slug, value.title, value.description, value.startsAt ?? "", value.endsAt ?? "");
       return value;
+    },
+    upsertConference(value) {
+      db.query(`INSERT INTO conferences VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET slug=excluded.slug, title=excluded.title, description=excluded.description, starts_at=excluded.starts_at, ends_at=excluded.ends_at`)
+        .run(value.id, value.slug, value.title, value.description, value.startsAt, value.endsAt);
+      return value;
+    },
+    upsertTrack(value) {
+      db.query(`INSERT INTO tracks VALUES (?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET conference_id=excluded.conference_id, title=excluded.title, sort_order=excluded.sort_order`)
+        .run(value.id, value.conferenceId, value.title, value.order);
+      return value;
+    },
+    upsertSession(value) {
+      db.query(`INSERT INTO sessions VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET track_id=excluded.track_id, slug=excluded.slug, title=excluded.title, description=excluded.description, starts_at=excluded.starts_at, ends_at=excluded.ends_at`)
+        .run(value.id, value.trackId, value.slug, value.title, value.description, value.startsAt ?? "", value.endsAt ?? "");
+      return value;
+    },
+    removeSessionsWithoutContributions(ids) {
+      if (ids.length === 0) return 0;
+      const remove = db.query("DELETE FROM sessions WHERE id=? AND NOT EXISTS (SELECT 1 FROM contributions WHERE contributions.session_id=sessions.id)");
+      return db.transaction(() => ids.reduce((count, sessionId) => count + remove.run(sessionId).changes, 0))();
+    },
+    removeTracksWithoutSessions(ids) {
+      if (ids.length === 0) return 0;
+      const remove = db.query("DELETE FROM tracks WHERE id=? AND NOT EXISTS (SELECT 1 FROM sessions WHERE sessions.track_id=tracks.id)");
+      return db.transaction(() => ids.reduce((count, trackId) => count + remove.run(trackId).changes, 0))();
     },
     getSessionContext(slug): SessionContext | undefined {
       const row = db.query(`SELECT c.id c_id, c.slug c_slug, c.title c_title, c.description c_description, c.starts_at c_starts, c.ends_at c_ends,
@@ -39,13 +67,16 @@ export function createSqliteRepository(path: string): ConferenceRepository {
       return {
         conference: { id: String(row.c_id), slug: String(row.c_slug), title: String(row.c_title), description: String(row.c_description), startsAt: String(row.c_starts), endsAt: String(row.c_ends) },
         track: { id: String(row.t_id), conferenceId: String(row.t_conference), title: String(row.t_title), order: Number(row.t_order) },
-        session: { id: String(row.s_id), trackId: String(row.s_track), slug: String(row.s_slug), title: String(row.s_title), description: String(row.s_description), startsAt: String(row.s_starts), endsAt: String(row.s_ends) },
+        session: { id: String(row.s_id), trackId: String(row.s_track), slug: String(row.s_slug), title: String(row.s_title), description: String(row.s_description), startsAt: optionalString(row.s_starts), endsAt: optionalString(row.s_ends) },
       };
     },
     listHierarchy() {
       const conferences = db.query("SELECT id, slug, title, description, starts_at startsAt, ends_at endsAt FROM conferences ORDER BY starts_at").all() as Conference[];
       const tracks = db.query("SELECT id, conference_id conferenceId, title, sort_order 'order' FROM tracks ORDER BY sort_order").all() as Track[];
-      const sessions = db.query("SELECT id, track_id trackId, slug, title, description, starts_at startsAt, ends_at endsAt FROM sessions ORDER BY starts_at").all() as Session[];
+      const sessions = (db.query("SELECT id, track_id trackId, slug, title, description, starts_at startsAt, ends_at endsAt FROM sessions ORDER BY starts_at").all() as Record<string, string>[]).map((row) => ({
+        id: String(row.id), trackId: String(row.trackId), slug: String(row.slug), title: String(row.title), description: String(row.description),
+        startsAt: optionalString(row.startsAt), endsAt: optionalString(row.endsAt),
+      }));
       return { conferences, tracks, sessions };
     },
     createContribution(value) {
@@ -108,6 +139,10 @@ function rowToContribution(row: Record<string, string | null>): Contribution {
     mediaKey: row.media_key ?? undefined, aiDescription: row.ai_description ?? undefined, tags: parse(row.tags_json, []),
     inferredSentiment: row.inferred_sentiment ?? undefined, embedding: parse(row.embedding_json, undefined), processingStatus: row.processing_status as Contribution["processingStatus"],
   };
+}
+
+function optionalString(value: unknown): string | undefined {
+  return typeof value === "string" && value.length > 0 ? value : undefined;
 }
 
 function rowToSynthesis(db: Database, row: Record<string, string>): Synthesis {
