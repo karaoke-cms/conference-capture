@@ -7,7 +7,13 @@
   "scripts": {
     "test": "bun test",
     "typecheck": "bun run --filter '*' typecheck",
-    "build": "bun run --filter '*' build"
+    "build": "bun run --filter '*' build",
+    "seed": "bun scripts/seed.ts",
+    "scheduler": "bun scripts/scheduler.ts",
+    "dev:api": "bun run --filter '@conference/api' dev",
+    "dev:web": "bun run --filter '@conference/web' dev",
+    "dev:worker": "bun run --filter '@conference/worker' dev",
+    "worker:once": "bun run --filter '@conference/worker' once"
   },
   "dependencies": {
     "drizzle-orm": "^0.44.5",

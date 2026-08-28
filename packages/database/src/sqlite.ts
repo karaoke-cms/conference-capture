@@ -10,6 +10,8 @@ const parse = <T>(value: string | null | undefined, fallback: T): T => value ? J
 export function createSqliteRepository(path: string): ConferenceRepository {
   const db = new Database(path, { create: true });
   db.exec("PRAGMA foreign_keys = ON;");
+  db.exec("PRAGMA journal_mode = WAL;");
+  db.exec("PRAGMA busy_timeout = 5000;");
   db.exec(sqliteSchema);
 
   const repository: ConferenceRepository = {
