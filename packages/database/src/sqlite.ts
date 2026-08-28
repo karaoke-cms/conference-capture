@@ -1,16 +1,16 @@
 import { Database } from "bun:sqlite";
 import type { Conference, Contribution, ContributionInput, ProcessingJob, ScopeType, Session, Synthesis, Track } from "@conference/contracts";
 import type { ConferenceRepository, SessionContext, SynthesisInput } from "./repository";
-import migration from "../migrations/0000_initial.sql" with { type: "text" };
+import { sqliteSchema } from "./schema";
 
 const id = (prefix: string) => `${prefix}_${crypto.randomUUID()}`;
 const now = () => new Date().toISOString();
-const parse = <T>(value: string | null, fallback: T): T => value ? JSON.parse(value) as T : fallback;
+const parse = <T>(value: string | null | undefined, fallback: T): T => value ? JSON.parse(value) as T : fallback;
 
 export function createSqliteRepository(path: string): ConferenceRepository {
   const db = new Database(path, { create: true });
   db.exec("PRAGMA foreign_keys = ON;");
-  db.exec(migration);
+  db.exec(sqliteSchema);
 
   const repository: ConferenceRepository = {
     createConference(value) {
@@ -65,7 +65,7 @@ export function createSqliteRepository(path: string): ConferenceRepository {
     claimNextJob() {
       const row = db.query("SELECT * FROM processing_jobs WHERE status='pending' AND scheduled_at <= ? ORDER BY scheduled_at LIMIT 1").get(now()) as Record<string, string | number | null> | null;
       if (!row) return undefined;
-      db.query("UPDATE processing_jobs SET status='processing', attempts=attempts+1 WHERE id=? AND status='pending'").run(row.id);
+      db.query("UPDATE processing_jobs SET status='processing', attempts=attempts+1 WHERE id=? AND status='pending'").run(String(row.id));
       return { id: String(row.id), type: String(row.job_type) as ProcessingJob["type"], scopeId: String(row.scope_id), status: "processing", scheduledAt: String(row.scheduled_at), attempts: Number(row.attempts) + 1 };
     },
     completeJob(jobId) { db.query("UPDATE processing_jobs SET status='completed', error=NULL WHERE id=?").run(jobId); },
@@ -106,9 +106,10 @@ function rowToContribution(row: Record<string, string | null>): Contribution {
 }
 
 function rowToSynthesis(db: Database, row: Record<string, string>): Synthesis {
-  const sources = db.query("SELECT contribution_id FROM synthesis_sources WHERE synthesis_id=? ORDER BY contribution_id").all(row.id) as { contribution_id: string }[];
+  const synthesisId = String(row.id);
+  const sources = db.query("SELECT contribution_id FROM synthesis_sources WHERE synthesis_id=? ORDER BY contribution_id").all(synthesisId) as { contribution_id: string }[];
   return {
-    id: row.id, scopeType: row.scope_type as ScopeType, scopeId: row.scope_id, generatedAt: row.generated_at, summary: row.summary,
+    id: synthesisId, scopeType: String(row.scope_type) as ScopeType, scopeId: String(row.scope_id), generatedAt: String(row.generated_at), summary: String(row.summary),
     themes: parse(row.themes_json, []), tensions: parse(row.tensions_json, []), weakSignals: parse(row.weak_signals_json, []),
     sentiment: parse(row.sentiment_json, {}), questions: parse(row.questions_json, []), sourceContributionIds: sources.map((item) => item.contribution_id),
   };

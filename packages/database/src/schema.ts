@@ -1,1 +1,14 @@
 export const migrationFile = new URL("../migrations/0000_initial.sql", import.meta.url);
+
+export const sqliteSchema = `
+CREATE TABLE conferences (id TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, title TEXT NOT NULL, description TEXT NOT NULL, starts_at TEXT NOT NULL, ends_at TEXT NOT NULL);
+CREATE TABLE tracks (id TEXT PRIMARY KEY, conference_id TEXT NOT NULL REFERENCES conferences(id), title TEXT NOT NULL, sort_order INTEGER NOT NULL);
+CREATE TABLE sessions (id TEXT PRIMARY KEY, track_id TEXT NOT NULL REFERENCES tracks(id), slug TEXT NOT NULL UNIQUE, title TEXT NOT NULL, description TEXT NOT NULL, starts_at TEXT NOT NULL, ends_at TEXT NOT NULL);
+CREATE TABLE contributions (id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES sessions(id), created_at TEXT NOT NULL, caption TEXT, contribution_type TEXT NOT NULL, signal TEXT NOT NULL, media_url TEXT, media_key TEXT, ai_description TEXT, tags_json TEXT NOT NULL DEFAULT '[]', inferred_sentiment TEXT, embedding_json TEXT, processing_status TEXT NOT NULL DEFAULT 'pending');
+CREATE TABLE processing_jobs (id TEXT PRIMARY KEY, job_type TEXT NOT NULL, scope_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', scheduled_at TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, error TEXT);
+CREATE TABLE syntheses (id TEXT PRIMARY KEY, scope_type TEXT NOT NULL, scope_id TEXT NOT NULL, generated_at TEXT NOT NULL, summary TEXT NOT NULL, themes_json TEXT NOT NULL, tensions_json TEXT NOT NULL, weak_signals_json TEXT NOT NULL, sentiment_json TEXT NOT NULL, questions_json TEXT NOT NULL);
+CREATE TABLE synthesis_sources (synthesis_id TEXT NOT NULL REFERENCES syntheses(id), contribution_id TEXT NOT NULL, PRIMARY KEY (synthesis_id, contribution_id));
+CREATE INDEX contributions_session_idx ON contributions(session_id, created_at);
+CREATE INDEX jobs_status_schedule_idx ON processing_jobs(status, scheduled_at);
+CREATE INDEX synthesis_scope_idx ON syntheses(scope_type, scope_id, generated_at);
+`;

@@ -42,6 +42,6 @@ export function registerPublicRoutes(app: Hono, dependencies: ApiDependencies) {
     if (!storage.get) return problem(c, 404, "media_not_found", "Media is served by object storage.");
     const key = c.req.path.replace(/^\/media\//, "");
     const object = await storage.get(key);
-    return object ? new Response(object.bytes) : problem(c, 404, "media_not_found", "Media not found.");
+    return object ? new Response(new Blob([new Uint8Array(object.bytes)])) : problem(c, 404, "media_not_found", "Media not found.");
   });
 }
