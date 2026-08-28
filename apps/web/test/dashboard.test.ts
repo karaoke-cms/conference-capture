@@ -1,0 +1,25 @@
+import { describe, expect, test } from "bun:test";
+import { contributionGroups, latestSynthesis, qrUrl, sentimentPercentages } from "../app/utils/dashboard";
+
+describe("organizer dashboard view model", () => {
+  test("groups contributions by session", () => {
+    const groups = contributionGroups([{ id: "a", sessionId: "s1" }, { id: "b", sessionId: "s2" }, { id: "c", sessionId: "s1" }]);
+    expect(groups.get("s1")?.map((item) => item.id)).toEqual(["a", "c"]);
+  });
+
+  test("selects the newest synthesis and calculates sentiment proportions", () => {
+    const items = [
+      { scopeType: "session", scopeId: "s1", generatedAt: "2026-01-01T10:00:00Z" },
+      { scopeType: "session", scopeId: "s1", generatedAt: "2026-01-01T11:00:00Z" },
+    ];
+    expect(latestSynthesis(items, "session", "s1")?.generatedAt).toContain("11:00");
+    expect(sentimentPercentages({ curious: 3, concerned: 1 })).toEqual([
+      { label: "curious", count: 3, percentage: 75 },
+      { label: "concerned", count: 1, percentage: 25 },
+    ]);
+  });
+
+  test("constructs a public session URL for QR encoding", () => {
+    expect(qrUrl("https://capture.example/", "ai-and-vsm")).toBe("https://capture.example/session/ai-and-vsm");
+  });
+});
