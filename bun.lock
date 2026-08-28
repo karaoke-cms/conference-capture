@@ -14,6 +14,13 @@
         "typescript": "^5.9.2",
       },
     },
+    "packages/ai": {
+      "name": "@conference/ai",
+      "dependencies": {
+        "@conference/contracts": "workspace:*",
+        "@conference/domain": "workspace:*",
+      },
+    },
     "packages/contracts": {
       "name": "@conference/contracts",
       "dependencies": {
@@ -80,6 +87,8 @@
     "@aws-sdk/xml-builder": ["@aws-sdk/xml-builder@3.972.40", "https://npm.tautai.tech/@aws-sdk/xml-builder/-/xml-builder-3.972.40.tgz", { "dependencies": { "@smithy/types": "^4.17.2", "tslib": "^2.6.2" } }, "sha512-wlFmCIGUlwF4zx/kncw+bmxTQh1HeSJq4mYV/V5cZUSJadDP3kXvGW8Rn21cimj/7y9ju+47oYWXi97vF7czaA=="],
 
     "@aws/lambda-invoke-store": ["@aws/lambda-invoke-store@0.3.0", "https://npm.tautai.tech/@aws/lambda-invoke-store/-/lambda-invoke-store-0.3.0.tgz", {}, "sha512-sl4Bm6yiMNYrZKkqqDFWN0UfnWhlS8ivKxrYl+6t0gCLrqr8y3B2IqZZbFRkfaVVp7C/baApyh71P+LeE1A2sQ=="],
+
+    "@conference/ai": ["@conference/ai@workspace:packages/ai"],
 
     "@conference/contracts": ["@conference/contracts@workspace:packages/contracts"],
 

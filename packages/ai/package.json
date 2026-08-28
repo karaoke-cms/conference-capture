@@ -1,0 +1,11 @@
+{
+  "name": "@conference/ai",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "test": "bun test", "typecheck": "tsc --noEmit", "build": "tsc --noEmit" },
+  "dependencies": {
+    "@conference/contracts": "workspace:*",
+    "@conference/domain": "workspace:*"
+  }
+}
