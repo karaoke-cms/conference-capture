@@ -16,3 +16,10 @@ test("routes participants through the session directory to contribution pages", 
   expect(directory).toContain("Contribute");
   expect(directory).toContain(":to=\"session.contributeUrl\"");
 });
+
+test("provides a working home link from an individual session", async () => {
+  const header = await readFile(new URL("../app/components/SessionHeader.vue", import.meta.url), "utf8");
+
+  expect(header).toContain('<NuxtLink to="/"');
+  expect(header).toContain('aria-label="Metaphorum home"');
+});
