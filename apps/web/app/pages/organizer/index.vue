@@ -20,17 +20,29 @@ async function load() {
     if (!response.ok) throw new Error(response.status === 401 ? "That organizer token was not accepted." : "The dashboard could not be loaded.");
     dashboard.value = await response.json();
     sessionStorage.setItem("organizer-token", token.value);
+    queued.value = new Set();
   } catch (cause) { error.value = cause instanceof Error ? cause.message : "The dashboard could not be loaded."; }
   finally { loading.value = false; }
 }
 
 async function generate(scopeType: ScopeType | "world-cafe", scopeId: string) {
   const key = `${scopeType}:${scopeId}`; queued.value = new Set([...queued.value, key]);
+  const previous = dashboard.value ? latestSynthesis(dashboard.value.syntheses, scopeType === "world-cafe" ? "conference" : scopeType, scopeId)?.generatedAt : undefined;
   const response = await fetch(`${config.public.apiBase}/api/organizer/synthesis`, {
     method: "POST", headers: { authorization: `Bearer ${token.value}`, "content-type": "application/json" },
     body: JSON.stringify({ scopeType, scopeId }),
   });
-  if (!response.ok) error.value = "The synthesis job could not be queued.";
+  if (!response.ok) {
+    error.value = "The synthesis job could not be queued.";
+    queued.value = new Set([...queued.value].filter((item) => item !== key));
+    return;
+  }
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await load();
+    const current = dashboard.value ? latestSynthesis(dashboard.value.syntheses, scopeType === "world-cafe" ? "conference" : scopeType, scopeId)?.generatedAt : undefined;
+    if (current && current !== previous) return;
+  }
 }
 const conference = computed(() => dashboard.value?.conferences[0]);
 const conferenceSynthesis = computed(() => conference.value && dashboard.value ? latestSynthesis(dashboard.value.syntheses, "conference", conference.value.id) : undefined);
