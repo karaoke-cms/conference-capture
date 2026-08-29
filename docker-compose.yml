@@ -3,31 +3,66 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.api
-    env_file: .env
     environment:
-      DATABASE_URL: sqlite:///data/conference.db
-      STORAGE_LOCAL_DIR: /data/uploads
-      PUBLIC_MEDIA_BASE_URL: http://localhost:8787/media
+      DATABASE_URL: ${DATABASE_URL:-sqlite:///data/conference.db}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      STORAGE_LOCAL_DIR: ${STORAGE_LOCAL_DIR:-/data/uploads}
+      PUBLIC_MEDIA_BASE_URL: ${PUBLIC_MEDIA_BASE_URL:-http://localhost:8787/media}
+      ORGANIZER_TOKEN: ${ORGANIZER_TOKEN:-}
+      CRON_SECRET: ${CRON_SECRET:-}
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+      API_PORT: "8787"
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-10000000}
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_REGION: ${S3_REGION:-eu-central-1}
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-false}
+      S3_PREFIX: ${S3_PREFIX:-metaphorum-2026/contributions}
     ports: ["8787:8787"]
     volumes: [conference-data:/data]
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:8787/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
   worker:
     build:
       context: .
       dockerfile: Dockerfile.worker
-    env_file: .env
     environment:
-      DATABASE_URL: sqlite:///data/conference.db
+      DATABASE_URL: ${DATABASE_URL:-sqlite:///data/conference.db}
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}
     volumes: [conference-data:/data]
     depends_on: [api]
+    healthcheck:
+      test: ["CMD", "bun", "-e", "process.exit(0)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
   web:
     build:
       context: .
       dockerfile: Dockerfile.web
       args:
-        API_BASE_URL: http://localhost:8787
+        API_BASE_URL: ${API_BASE_URL:-http://localhost:8787}
     environment:
-      API_BASE_URL: http://localhost:8787
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:8787}
+      NUXT_PUBLIC_API_BASE: ${API_BASE_URL:-http://localhost:8787}
     ports: ["3000:3000"]
     depends_on: [api]
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
 volumes:
   conference-data:
