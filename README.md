@@ -242,3 +242,4 @@ The API and worker share a named volume for the local SQLite database and upload
 ## Deliberate MVP boundaries
 
 The MVP does not add participant accounts, participant tracking, real-time websockets, moderation workflows, or Nostr publication. The interfaces for persistence, storage, and AI are separate packages so these capabilities can evolve without changing the participant flow.
+# conference-capture
