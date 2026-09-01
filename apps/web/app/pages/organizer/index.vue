@@ -1,12 +1,25 @@
 <script setup lang="ts">
 const { token, dashboard, error, loading, restoreToken, load } = useOrganizerDashboard();
+const route = useRoute();
 
 definePageMeta({ layout: "organizer" });
 useHead({ title: "Organizer · Metaphorum Sensemaking" });
-onMounted(() => { restoreToken(); if (token.value) load(); });
+
+// Only ever hand control back to an internal organizer path.
+const next = computed(() => {
+  const value = typeof route.query.next === "string" ? route.query.next : "";
+  return value.startsWith("/organizer") && !value.startsWith("//") ? value : "";
+});
+
+async function open() {
+  await load();
+  if (dashboard.value && next.value) await navigateTo(next.value);
+}
+
+onMounted(() => { restoreToken(); if (token.value) open(); });
 </script>
 <template>
-  <form v-if="!dashboard" class="gate" @submit.prevent="load">
+  <form v-if="!dashboard" class="gate" @submit.prevent="open">
     <p class="eyebrow">Protected view</p><h2 class="display">Enter the organizer token.</h2>
     <label><span>Organizer token</span><input v-model="token" type="password" autocomplete="current-password" required /></label>
     <button type="submit" :disabled="loading">{{ loading ? "Opening…" : "Open dashboard" }}</button>

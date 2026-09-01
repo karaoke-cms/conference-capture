@@ -12,7 +12,8 @@ export function useOrganizerDashboard() {
   const queued = useState<Set<string>>("organizer-queued", () => new Set());
 
   function restoreToken() {
-    if (import.meta.client && !token.value) token.value = sessionStorage.getItem("organizer-token") ?? "";
+    // localStorage so a link opened in a new tab stays signed in; sessionStorage is per-tab.
+    if (import.meta.client && !token.value) token.value = localStorage.getItem("organizer-token") ?? sessionStorage.getItem("organizer-token") ?? "";
   }
 
   async function load() {
@@ -21,7 +22,7 @@ export function useOrganizerDashboard() {
       const response = await fetch(`${config.public.apiBase}/api/organizer/dashboard`, { headers: { authorization: `Bearer ${token.value}` } });
       if (!response.ok) throw new Error(response.status === 401 ? "That organizer token was not accepted." : "The dashboard could not be loaded.");
       dashboard.value = await response.json();
-      if (import.meta.client) sessionStorage.setItem("organizer-token", token.value);
+      if (import.meta.client) localStorage.setItem("organizer-token", token.value);
       queued.value = new Set();
     } catch (cause) { error.value = cause instanceof Error ? cause.message : "The dashboard could not be loaded."; }
     finally { loading.value = false; }

@@ -39,6 +39,28 @@ describe("organizer session panel footer", () => {
   });
 });
 
+describe("staying signed in when a link opens a new tab", () => {
+  test("keeps the token in localStorage, which is shared across tabs", async () => {
+    const composable = await read("../app/composables/useOrganizerDashboard.ts");
+    expect(composable).toContain("localStorage.setItem(\"organizer-token\"");
+    expect(composable).toContain("localStorage.getItem(\"organizer-token\")");
+    expect(composable).not.toContain("sessionStorage.setItem");
+  });
+
+  test("carries the requested page through the sign-in redirect", async () => {
+    const layout = await read("../app/layouts/organizer.vue");
+    const gate = await read("../app/pages/organizer/index.vue");
+
+    expect(layout).toContain("query: { next: route.fullPath }");
+    expect(gate).toContain("navigateTo(next.value)");
+  });
+
+  test("refuses to bounce anywhere but an internal organizer path", async () => {
+    const gate = await read("../app/pages/organizer/index.vue");
+    expect(gate).toContain("value.startsWith(\"/organizer\") && !value.startsWith(\"//\")");
+  });
+});
+
 describe("inline refresh after generate", () => {
   test("waits long enough for a real model call and keeps the panel busy while waiting", async () => {
     const composable = await read("../app/composables/useOrganizerDashboard.ts");
