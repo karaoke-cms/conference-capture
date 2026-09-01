@@ -39,12 +39,14 @@ export function useOrganizerDashboard() {
       queued.value = new Set([...queued.value].filter((item) => item !== key));
       return;
     }
-    for (let attempt = 0; attempt < 8; attempt += 1) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       await load();
       const current = dashboard.value ? latestSynthesis(dashboard.value.syntheses, scopeType === "world-cafe" ? "conference" : scopeType, scopeId)?.generatedAt : undefined;
       if (current && current !== previous) return;
+      queued.value = new Set([...queued.value, key]);
     }
+    queued.value = new Set([...queued.value].filter((item) => item !== key));
   }
 
   const conference = computed(() => dashboard.value?.conferences[0]);
