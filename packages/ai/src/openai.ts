@@ -35,6 +35,21 @@ function parseJsonObject(text: string): Record<string, unknown> {
   return parsed as Record<string, unknown>;
 }
 
+export function toStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => {
+    if (typeof item === "string") return item.trim();
+    if (item && typeof item === "object") {
+      const record = item as Record<string, unknown>;
+      const candidate = record.theme ?? record.tension ?? record.signal ?? record.title ?? record.label ?? record.text ?? record.name ?? record.summary ?? record.description;
+      if (typeof candidate === "string") return candidate.trim();
+      const strings = Object.values(record).filter((entry): entry is string => typeof entry === "string");
+      if (strings.length) return strings.join(" — ");
+    }
+    return "";
+  }).filter((item) => item.length > 0);
+}
+
 export function createOpenAiProvider(config: { apiKey: string; model?: string }): AiProvider {
   const fallback = createMockAiProvider();
   const request = async (task: string, input: unknown) => {
@@ -60,11 +75,17 @@ export function createOpenAiProvider(config: { apiKey: string; model?: string })
     },
     async synthesize(input) {
       try {
-        const result = await request("Synthesize themes, tensions, weakSignals, summary, and exact sourceContributionIds.", input) as unknown as Awaited<ReturnType<AiProvider["synthesize"]>>;
+        const result = await request("Synthesize themes, tensions, weakSignals, summary, and exact sourceContributionIds. themes, tensions, and weakSignals must each be an array of short plain-text strings, not objects.", input) as unknown as Awaited<ReturnType<AiProvider["synthesize"]>>;
         if (input.contributions.length > 0 && (!result.sourceContributionIds || result.sourceContributionIds.length === 0)) {
           return fallback.synthesize(input);
         }
-        return { ...result, sentiment: tallySentiment(input.contributions) };
+        return {
+          ...result,
+          themes: toStringArray(result.themes),
+          tensions: toStringArray(result.tensions),
+          weakSignals: toStringArray(result.weakSignals),
+          sentiment: tallySentiment(input.contributions),
+        };
       } catch { return fallback.synthesize(input); }
     },
     async generateQuestions(input) {
