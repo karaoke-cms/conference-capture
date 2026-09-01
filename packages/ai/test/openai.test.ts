@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { extractOpenAiOutputText, tallySentiment } from "../src/openai";
+import { extractOpenAiOutputText, tallySentiment, toStringArray } from "../src/openai";
 
 test("reads Responses API message text when output_text is absent", () => {
   const text = extractOpenAiOutputText({
@@ -26,4 +26,19 @@ test("tallies sentiment as a flat label-to-count map, regardless of what the mod
     { id: "c3", signal: "excited", tags: [] },
   ]);
   expect(sentiment).toEqual({ curious: 2, excited: 1 });
+});
+
+test("passes plain strings through untouched", () => {
+  expect(toStringArray(["Community trust", "Slow onboarding"])).toEqual(["Community trust", "Slow onboarding"]);
+});
+
+test("coerces object items into a plain string so the UI never renders raw JSON", () => {
+  expect(toStringArray([{ theme: "Community trust", description: "Recurs across sessions" }])).toEqual(["Community trust"]);
+  expect(toStringArray([{ title: "Slow onboarding" }])).toEqual(["Slow onboarding"]);
+  expect(toStringArray([{ foo: "A", bar: "B" }])).toEqual(["A — B"]);
+});
+
+test("drops non-array and empty values", () => {
+  expect(toStringArray(undefined)).toEqual([]);
+  expect(toStringArray([{}, null, 42])).toEqual([]);
 });
