@@ -11,6 +11,7 @@
     "dev": "bun scripts/dev.ts",
     "stop": "bun scripts/stop-dev.ts",
     "seed": "bun scripts/seed.ts",
+    "seed:contributions": "bun scripts/seed-contributions.ts",
     "import:metaphorum": "bun scripts/import-metaphorum.ts",
     "scheduler": "bun scripts/scheduler.ts",
     "dev:api": "bun --watch apps/api/src/index.ts",
