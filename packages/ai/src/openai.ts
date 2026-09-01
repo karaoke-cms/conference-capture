@@ -75,8 +75,10 @@ export function createOpenAiProvider(config: { apiKey: string; model?: string })
     },
     async synthesize(input) {
       try {
-        const result = await request("Synthesize themes, tensions, weakSignals, summary, and exact sourceContributionIds. themes, tensions, and weakSignals must each be an array of short plain-text strings, not objects.", input) as unknown as Awaited<ReturnType<AiProvider["synthesize"]>>;
-        if (input.contributions.length > 0 && (!result.sourceContributionIds || result.sourceContributionIds.length === 0)) {
+        const raw = await request("Synthesize themes, tensions, weakSignals, summary, and sourceContributionIds holding the exact contribution ids you used. themes, tensions, and weakSignals must each be an array of short plain-text strings, not objects.", input);
+        const result = raw as unknown as Awaited<ReturnType<AiProvider["synthesize"]>>;
+        const sourceContributionIds = toStringArray(raw.sourceContributionIds ?? raw.exactSourceContributionIds);
+        if (input.contributions.length > 0 && sourceContributionIds.length === 0) {
           return fallback.synthesize(input);
         }
         const themes = toStringArray(result.themes);
@@ -85,7 +87,7 @@ export function createOpenAiProvider(config: { apiKey: string; model?: string })
         if (input.contributions.length > 0 && themes.length === 0 && tensions.length === 0 && weakSignals.length === 0) {
           return fallback.synthesize(input);
         }
-        return { ...result, themes, tensions, weakSignals, sentiment: tallySentiment(input.contributions) };
+        return { ...result, themes, tensions, weakSignals, sourceContributionIds, sentiment: tallySentiment(input.contributions) };
       } catch { return fallback.synthesize(input); }
     },
     async generateQuestions(input) {

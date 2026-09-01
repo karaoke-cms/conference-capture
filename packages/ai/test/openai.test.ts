@@ -60,3 +60,25 @@ test("falls back to the mock provider when the model returns no themes, tensions
     globalThis.fetch = originalFetch;
   }
 });
+
+test("keeps the model's synthesis when it names provenance exactSourceContributionIds", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async () => new Response(JSON.stringify({
+    output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({
+      summary: "Curious skepticism about problem fit.",
+      themes: ["problem-solution misalignment"], tensions: ["solution vs real user need"], weakSignals: ["unclear value proposition"],
+      exactSourceContributionIds: ["c1"],
+    }) }] }],
+  }), { status: 200 })) as unknown as typeof fetch;
+  try {
+    const provider = createOpenAiProvider({ apiKey: "test-key" });
+    const result = await provider.synthesize({
+      scopeType: "session", scopeId: "s1",
+      contributions: [{ id: "c1", caption: "Felt like a solution looking for a problem.", signal: "curious", tags: [] }],
+    });
+    expect(result.themes).toEqual(["problem-solution misalignment"]);
+    expect(result.sourceContributionIds).toEqual(["c1"]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
