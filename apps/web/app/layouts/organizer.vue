@@ -8,20 +8,20 @@ onMounted(async () => {
   if (!dashboard.value && route.path !== "/organizer") await navigateTo("/organizer");
 });
 
-const sections = [
-  { to: "/organizer/contributions", label: "Contributions" },
-  { to: "/organizer/sessions", label: "Sessions" },
-  { to: "/organizer/tracks", label: "Tracks" },
+const sections = computed(() => [
+  { to: "/organizer/contributions", label: "Contributions", count: dashboard.value?.contributions.length },
+  { to: "/organizer/sessions", label: "Sessions", count: dashboard.value?.sessions.length },
+  { to: "/organizer/tracks", label: "Tracks", count: dashboard.value?.tracks.length },
   { to: "/organizer/conference", label: "Whole conference" },
   { to: "/organizer/world-cafe", label: "World Café" },
   { to: "/organizer/qr-codes", label: "Session QR codes" },
-];
+]);
 </script>
 <template>
   <main>
     <header class="masthead"><NuxtLink to="/" class="mark">M<br />26</NuxtLink><div><p class="eyebrow">Organizer console</p><h1 class="display">Conference pulse</h1></div><button v-if="dashboard" type="button" @click="load">Refresh</button></header>
     <nav v-if="dashboard" aria-label="Dashboard sections" class="section-nav">
-      <NuxtLink v-for="section in sections" :key="section.to" :to="section.to" class="section-button">{{ section.label }}</NuxtLink>
+      <NuxtLink v-for="section in sections" :key="section.to" :to="section.to" class="section-button">{{ section.label }} <b v-if="section.count !== undefined">{{ section.count }}</b></NuxtLink>
     </nav>
     <p v-if="error" class="banner" role="alert">{{ error }}</p>
     <slot />
@@ -36,6 +36,7 @@ button { min-height: 44px; padding: .65rem .9rem; border: 1px solid var(--ink); 
 .section-nav { position: sticky; z-index: 2; top: 0; display: flex; flex-wrap: wrap; gap: 1px; margin: 1.5rem 0 0; overflow-x: auto; background: var(--rule); }
 .section-button { display: flex; min-width: max-content; min-height: 44px; gap: .6rem; align-items: center; padding: .65rem .85rem; color: var(--ink); background: var(--paper); font-size: .78rem; font-weight: 750; text-decoration: none; }
 .section-button.router-link-active { color: white; background: var(--ink); }
+.section-button b { color: var(--signal); }
 .banner { position: sticky; z-index: 3; top: 3.5rem; padding: .8rem; color: white; background: #9b2412; }
 @media (max-width: 34rem) { .masthead { grid-template-columns: auto 1fr; } .masthead > button { grid-column: 1 / -1; } }
 </style>
