@@ -51,7 +51,7 @@ async function submit() {
       <input ref="input" type="file" accept="image/jpeg,image/png,image/webp,image/heic" capture="environment" aria-label="Choose or take a photo" @change="choosePhoto" />
     </div>
 
-    <label class="caption"><span>What caught your attention? <small>Optional</small></span><textarea v-model="caption" rows="4" maxlength="2000" placeholder="A phrase, question, tension, or something you noticed…" /></label>
+    <label class="caption"><span>What caught your attention? <small>Optional</small></span><textarea v-model="caption" rows="4" maxlength="2000" placeholder="An idea, question, tension, or something you noticed…" /></label>
 
     <fieldset class="types">
       <legend>What kind of contribution is this?</legend>
