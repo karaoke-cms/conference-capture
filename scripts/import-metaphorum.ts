@@ -1,24 +1,10 @@
 import type { ConferenceRepository } from "../packages/database/src";
 import { createSqliteRepository } from "../packages/database/src";
+import { importProgramme } from "../packages/domain/src";
 import { loadMetaphorumProgramme, type MetaphorumProgramme } from "./metaphorum-programme";
 
-const demoSessionIds = ["session-ai-vsm", "session-governance"] as const;
-const demoTrackIds = ["track-emerging", "track-practice"] as const;
-
 export function importMetaphorumProgramme(repository: ConferenceRepository, programme: MetaphorumProgramme) {
-  repository.upsertConference(programme.conference);
-  for (const track of programme.tracks) {
-    repository.upsertTrack({ id: track.id, conferenceId: track.conferenceId, title: track.title, order: track.order });
-  }
-  for (const session of programme.sessions) {
-    repository.upsertSession({
-      id: session.id, trackId: session.trackId, slug: session.slug, title: session.title,
-      description: session.description, startsAt: session.startsAt, endsAt: session.endsAt,
-    });
-  }
-  const removedDemoSessions = repository.removeSessionsWithoutContributions(demoSessionIds);
-  repository.removeTracksWithoutSessions(demoTrackIds);
-  return { tracks: programme.tracks.length, sessions: programme.sessions.length, removedDemoSessions };
+  return importProgramme(repository, programme);
 }
 
 if (import.meta.main) {

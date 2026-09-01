@@ -1,4 +1,5 @@
 import type { JobType, ScopeType } from "@conference/contracts";
+import { importProgramme, metaphorumProgramme } from "@conference/domain";
 import type { Hono, MiddlewareHandler } from "hono";
 import type { ApiDependencies } from "../dependencies";
 import { problem } from "../errors";
@@ -30,4 +31,10 @@ export function registerOrganizerRoutes(app: Hono, dependencies: ApiDependencies
     if (!type) return problem(c, 422, "invalid_scope", "Unknown synthesis scope.");
     return c.json({ job: repository.enqueueJob({ type, scopeId: body.scopeId }) }, 202);
   });
+  app.get("/api/organizer/programme", (c) => c.json({
+    tracks: metaphorumProgramme.tracks.length,
+    sessions: metaphorumProgramme.sessions.length,
+    scheduled: metaphorumProgramme.sessions.filter((session) => session.startsAt).length,
+  }));
+  app.post("/api/organizer/import-sessions", (c) => c.json(importProgramme(repository, metaphorumProgramme)));
 }

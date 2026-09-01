@@ -5,10 +5,11 @@ const route = useRoute();
 definePageMeta({ layout: "organizer" });
 useHead({ title: "Organizer · Metaphorum Sensemaking" });
 
-// Only ever hand control back to an internal organizer path.
+// Only ever hand control back to an internal token-gated path.
+const gatedPrefixes = ["/organizer", "/import"];
 const next = computed(() => {
   const value = typeof route.query.next === "string" ? route.query.next : "";
-  return value.startsWith("/organizer") && !value.startsWith("//") ? value : "";
+  return !value.startsWith("//") && gatedPrefixes.some((prefix) => value.startsWith(prefix)) ? value : "";
 });
 
 async function open() {

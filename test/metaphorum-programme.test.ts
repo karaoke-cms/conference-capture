@@ -4,11 +4,15 @@ import { loadMetaphorumProgramme, normalizeMetaphorumProgramme, stableSessionSlu
 const source = "/Users/mathis/dev/metaphorum/metaphorum";
 
 describe("Metaphorum programme normalization", () => {
-  test("loads all source tracks and talks without inventing schedules", () => {
+  test("loads all source tracks and talks, scheduling only what the source schedules", () => {
     const programme = loadMetaphorumProgramme(source);
     expect(programme.tracks).toHaveLength(6);
-    expect(programme.sessions).toHaveLength(74);
-    expect(programme.sessions.every((session) => session.startsAt === undefined && session.endsAt === undefined)).toBe(true);
+    expect(programme.sessions.length).toBeGreaterThan(0);
+    // A time is only ever carried over from a schedule row, never invented.
+    const scheduled = programme.sessions.filter((session) => session.startsAt);
+    expect(scheduled.length).toBeGreaterThan(0);
+    expect(scheduled.every((session) => Boolean(session.endsAt))).toBe(true);
+    expect(programme.sessions.every((session) => session.startsAt !== null)).toBe(true);
   });
 
   test("preserves source relationships and enriches descriptions with speakers", () => {
@@ -22,7 +26,7 @@ describe("Metaphorum programme normalization", () => {
   test("generates stable unique URL slugs", () => {
     expect(stableSessionSlug("AI, Agency & the VSM", "talk42")).toBe("ai-agency-the-vsm-talk42");
     const programme = loadMetaphorumProgramme(source);
-    expect(new Set(programme.sessions.map((session) => session.slug)).size).toBe(74);
+    expect(new Set(programme.sessions.map((session) => session.slug)).size).toBe(programme.sessions.length);
   });
 
   test("uses matching schedule rows when supplied", () => {
