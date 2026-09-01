@@ -20,3 +20,11 @@ export function contributionIdsForScope(scope: ScopeType, scopeId: string, data:
   const sessionIds = new Set(data.sessions.filter((session) => trackIds.has(session.trackId)).map((session) => session.id));
   return normalizeSourceIds(data.contributions.filter((item) => sessionIds.has(item.sessionId)).map((item) => item.id));
 }
+
+const PLACEHOLDER_TEXT = new Set(["noop", "asdf", "test", "n/a", "lorem ipsum"]);
+
+export function isPlaceholderContribution(contribution: { caption?: string; tags: readonly string[] }): boolean {
+  const caption = contribution.caption?.trim().toLowerCase();
+  if (caption && PLACEHOLDER_TEXT.has(caption)) return true;
+  return contribution.tags.length > 0 && contribution.tags.every((tag) => PLACEHOLDER_TEXT.has(tag.trim().toLowerCase()));
+}
