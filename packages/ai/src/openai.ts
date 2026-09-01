@@ -35,6 +35,16 @@ function parseJsonObject(text: string): Record<string, unknown> {
   return parsed as Record<string, unknown>;
 }
 
+export function stripContributionIds(text: string): string {
+  return text
+    .replace(/\(\s*con_[0-9a-f-]+\s*[;,]?\s*/gi, "(")
+    .replace(/\bcon_[0-9a-f-]+\b\s*[:;,]?\s*/gi, "")
+    .replace(/\(\s*\)/g, "")
+    .replace(/\s+([.,;:)])/g, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 export function toStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value.map((item) => {
@@ -48,6 +58,10 @@ export function toStringArray(value: unknown): string[] {
     }
     return "";
   }).filter((item) => item.length > 0);
+}
+
+function toProseArray(value: unknown): string[] {
+  return toStringArray(value).map(stripContributionIds).filter((item) => item.length > 0);
 }
 
 export function createOpenAiProvider(config: { apiKey: string; model?: string }): AiProvider {
@@ -75,19 +89,20 @@ export function createOpenAiProvider(config: { apiKey: string; model?: string })
     },
     async synthesize(input) {
       try {
-        const raw = await request("Synthesize themes, tensions, weakSignals, summary, and sourceContributionIds holding the exact contribution ids you used. themes, tensions, and weakSignals must each be an array of short plain-text strings, not objects.", input);
+        const raw = await request("Synthesize themes, tensions, weakSignals, summary, and sourceContributionIds holding the exact contribution ids you used. themes, tensions, and weakSignals must each be an array of short plain-text strings, not objects. summary is prose for conference participants: never print contribution ids in it, and refer to people as participants rather than by id.", input);
         const result = raw as unknown as Awaited<ReturnType<AiProvider["synthesize"]>>;
         const sourceContributionIds = toStringArray(raw.sourceContributionIds ?? raw.exactSourceContributionIds);
         if (input.contributions.length > 0 && sourceContributionIds.length === 0) {
           return fallback.synthesize(input);
         }
-        const themes = toStringArray(result.themes);
-        const tensions = toStringArray(result.tensions);
-        const weakSignals = toStringArray(result.weakSignals);
+        const themes = toProseArray(result.themes);
+        const tensions = toProseArray(result.tensions);
+        const weakSignals = toProseArray(result.weakSignals);
         if (input.contributions.length > 0 && themes.length === 0 && tensions.length === 0 && weakSignals.length === 0) {
           return fallback.synthesize(input);
         }
-        return { ...result, themes, tensions, weakSignals, sourceContributionIds, sentiment: tallySentiment(input.contributions) };
+        const summary = typeof result.summary === "string" ? stripContributionIds(result.summary) : result.summary;
+        return { ...result, summary, themes, tensions, weakSignals, sourceContributionIds, sentiment: tallySentiment(input.contributions) };
       } catch { return fallback.synthesize(input); }
     },
     async generateQuestions(input) {

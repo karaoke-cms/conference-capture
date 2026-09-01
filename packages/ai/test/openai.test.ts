@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { createOpenAiProvider, extractOpenAiOutputText, tallySentiment, toStringArray } from "../src/openai";
+import { createOpenAiProvider, extractOpenAiOutputText, stripContributionIds, tallySentiment, toStringArray } from "../src/openai";
 
 test("reads Responses API message text when output_text is absent", () => {
   const text = extractOpenAiOutputText({
@@ -78,6 +78,36 @@ test("keeps the model's synthesis when it names provenance exactSourceContributi
     });
     expect(result.themes).toEqual(["problem-solution misalignment"]);
     expect(result.sourceContributionIds).toEqual(["c1"]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("strips internal contribution ids out of reader-facing prose", () => {
+  expect(stripContributionIds('con_0f071d79-5ca6-454f-a6a5-84f8379da9ee: "Quiet, thoughtful discussion." (signal: concerned).'))
+    .toBe('"Quiet, thoughtful discussion." (signal: concerned).');
+  expect(stripContributionIds("one observing an energy shift (con_3ef123cf-2804-4266-b01a-04b49961656c; signal: curious), and one more"))
+    .toBe("one observing an energy shift (signal: curious), and one more");
+  expect(stripContributionIds("Grounded discussion with no ids.")).toBe("Grounded discussion with no ids.");
+});
+
+test("keeps contribution ids in provenance while scrubbing them from the summary", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async () => new Response(JSON.stringify({
+    output_text: JSON.stringify({
+      summary: "con_0f071d79-5ca6-454f-a6a5-84f8379da9ee reported quiet reflection and signaled concern.",
+      themes: ["reflective session"], tensions: ["quiet vs energised"], weakSignals: ["lingering confusion"],
+      sourceContributionIds: ["con_0f071d79-5ca6-454f-a6a5-84f8379da9ee"],
+    }),
+  }), { status: 200 })) as unknown as typeof fetch;
+  try {
+    const provider = createOpenAiProvider({ apiKey: "test-key" });
+    const result = await provider.synthesize({
+      scopeType: "session", scopeId: "s1",
+      contributions: [{ id: "con_0f071d79-5ca6-454f-a6a5-84f8379da9ee", caption: "Quiet, thoughtful discussion.", signal: "concerned", tags: [] }],
+    });
+    expect(result.summary).toBe("reported quiet reflection and signaled concern.");
+    expect(result.sourceContributionIds).toEqual(["con_0f071d79-5ca6-454f-a6a5-84f8379da9ee"]);
   } finally {
     globalThis.fetch = originalFetch;
   }
