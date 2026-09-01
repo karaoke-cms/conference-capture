@@ -1,7 +1,7 @@
 import type { AiProvider } from "@conference/ai";
 import type { JobType, ScopeType } from "@conference/contracts";
 import type { ConferenceRepository } from "@conference/database";
-import { contributionIdsForScope } from "@conference/domain";
+import { contributionIdsForScope, isPlaceholderContribution } from "@conference/domain";
 
 const scopeByJob: Partial<Record<JobType, ScopeType>> = {
   "synthesize-session": "session",
@@ -42,7 +42,7 @@ export async function handleJob(repository: ConferenceRepository, ai: AiProvider
     scopeId,
     contributions: contributions.filter((item) => sourceIds.includes(item.id)).map((item) => ({
       id: item.id, caption: item.caption, signal: item.signal, tags: item.tags, aiDescription: item.aiDescription,
-    })),
+    })).filter((item) => !isPlaceholderContribution(item)),
   });
   repository.saveSynthesis({ scopeType, scopeId, ...synthesis, questions: [] });
 }

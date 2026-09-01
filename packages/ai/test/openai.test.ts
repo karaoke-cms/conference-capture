@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { extractOpenAiOutputText, tallySentiment, toStringArray } from "../src/openai";
+import { createOpenAiProvider, extractOpenAiOutputText, tallySentiment, toStringArray } from "../src/openai";
 
 test("reads Responses API message text when output_text is absent", () => {
   const text = extractOpenAiOutputText({
@@ -41,4 +41,22 @@ test("coerces object items into a plain string so the UI never renders raw JSON"
 test("drops non-array and empty values", () => {
   expect(toStringArray(undefined)).toEqual([]);
   expect(toStringArray([{}, null, 42])).toEqual([]);
+});
+
+test("falls back to the mock provider when the model returns no themes, tensions, or weakSignals for real contributions", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async () => new Response(JSON.stringify({
+    output_text: JSON.stringify({ summary: "Nothing notable.", themes: [], tensions: [], weakSignals: [], sourceContributionIds: ["c1"] }),
+  }), { status: 200 })) as unknown as typeof fetch;
+  try {
+    const provider = createOpenAiProvider({ apiKey: "test-key" });
+    const result = await provider.synthesize({
+      scopeType: "session", scopeId: "s1",
+      contributions: [{ id: "c1", caption: "Felt like a solution looking for a problem.", signal: "curious", tags: ["solution", "problem"] }],
+    });
+    expect(result.themes).toEqual(["problem", "solution"]);
+    expect(result.sourceContributionIds).toEqual(["c1"]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

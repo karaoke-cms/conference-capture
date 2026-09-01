@@ -79,13 +79,13 @@ export function createOpenAiProvider(config: { apiKey: string; model?: string })
         if (input.contributions.length > 0 && (!result.sourceContributionIds || result.sourceContributionIds.length === 0)) {
           return fallback.synthesize(input);
         }
-        return {
-          ...result,
-          themes: toStringArray(result.themes),
-          tensions: toStringArray(result.tensions),
-          weakSignals: toStringArray(result.weakSignals),
-          sentiment: tallySentiment(input.contributions),
-        };
+        const themes = toStringArray(result.themes);
+        const tensions = toStringArray(result.tensions);
+        const weakSignals = toStringArray(result.weakSignals);
+        if (input.contributions.length > 0 && themes.length === 0 && tensions.length === 0 && weakSignals.length === 0) {
+          return fallback.synthesize(input);
+        }
+        return { ...result, themes, tensions, weakSignals, sentiment: tallySentiment(input.contributions) };
       } catch { return fallback.synthesize(input); }
     },
     async generateQuestions(input) {
