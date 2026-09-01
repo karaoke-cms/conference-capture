@@ -28,9 +28,11 @@ export function extractOpenAiOutputText(payload: unknown): string {
   return text;
 }
 
-function parseJsonObject(text: string): Record<string, unknown> {
-  const trimmed = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
-  const parsed = JSON.parse(trimmed) as unknown;
+function parseJson(text: string): unknown {
+  return JSON.parse(text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "")) as unknown;
+}
+
+function asJsonObject(parsed: unknown): Record<string, unknown> {
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("AI provider returned no structured output");
   return parsed as Record<string, unknown>;
 }
@@ -40,7 +42,7 @@ export function stripContributionIds(text: string): string {
     .replace(/\(\s*con_[0-9a-f-]+\s*[;,]?\s*/gi, "(")
     .replace(/\bcon_[0-9a-f-]+\b\s*[:;,]?\s*/gi, "")
     .replace(/\(\s*\)/g, "")
-    .replace(/\s+([.,;:)])/g, "$1")
+    .replace(/\s+([.,;:!?)])/g, "$1")
     .replace(/\s{2,}/g, " ")
     .trim();
 }
@@ -51,7 +53,7 @@ export function toStringArray(value: unknown): string[] {
     if (typeof item === "string") return item.trim();
     if (item && typeof item === "object") {
       const record = item as Record<string, unknown>;
-      const candidate = record.theme ?? record.tension ?? record.signal ?? record.title ?? record.label ?? record.text ?? record.name ?? record.summary ?? record.description;
+      const candidate = record.question ?? record.theme ?? record.tension ?? record.signal ?? record.title ?? record.label ?? record.text ?? record.name ?? record.summary ?? record.description;
       if (typeof candidate === "string") return candidate.trim();
       const strings = Object.values(record).filter((entry): entry is string => typeof entry === "string");
       if (strings.length) return strings.join(" — ");
@@ -64,9 +66,22 @@ function toProseArray(value: unknown): string[] {
   return toStringArray(value).map(stripContributionIds).filter((item) => item.length > 0);
 }
 
+// The model answers this one as a bare array, a { questions } object, or one key per role.
+const questionRoleKeys = ["convergence", "tension", "blindSpot", "blind_spot", "blindspot", "action"];
+
+export function toQuestionList(raw: unknown): string[] {
+  const bare = toProseArray(raw);
+  if (bare.length) return bare.slice(0, 4);
+  if (!raw || typeof raw !== "object") return [];
+  const record = raw as Record<string, unknown>;
+  const named = toProseArray(record.questions ?? record.worldCafeQuestions);
+  if (named.length) return named.slice(0, 4);
+  return toProseArray(questionRoleKeys.map((key) => record[key]).filter((value) => value !== undefined)).slice(0, 4);
+}
+
 export function createOpenAiProvider(config: { apiKey: string; model?: string }): AiProvider {
   const fallback = createMockAiProvider();
-  const request = async (task: string, input: unknown) => {
+  const requestJson = async (task: string, input: unknown): Promise<unknown> => {
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: { authorization: `Bearer ${config.apiKey}`, "content-type": "application/json" },
@@ -79,8 +94,10 @@ export function createOpenAiProvider(config: { apiKey: string; model?: string })
       }),
     });
     if (!response.ok) throw new Error(`AI provider returned ${response.status}`);
-    return parseJsonObject(extractOpenAiOutputText(await response.json()));
+    return parseJson(extractOpenAiOutputText(await response.json()));
   };
+  // Everything but the questions task must come back as a JSON object.
+  const request = async (task: string, input: unknown) => asJsonObject(await requestJson(task, input));
   return {
     name: "openai",
     async analyzeContribution(input) {
@@ -107,8 +124,9 @@ export function createOpenAiProvider(config: { apiKey: string; model?: string })
     },
     async generateQuestions(input) {
       try {
-        const result = await request("Generate four grounded World Cafe questions: convergence, tension, blind spot, action.", input);
-        return Array.isArray(result.questions) ? result.questions.filter((item): item is string => typeof item === "string").slice(0, 4) : fallback.generateQuestions(input);
+        const result = await requestJson("Generate four grounded World Cafe questions, one each for convergence, tension, blind spot, and action. Return them as questions: an array of exactly four plain-text question strings in that order, with no other keys and no contribution ids inside the questions.", input);
+        const questions = toQuestionList(result);
+        return questions.length ? questions : fallback.generateQuestions(input);
       } catch { return fallback.generateQuestions(input); }
     },
   };

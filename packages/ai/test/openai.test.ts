@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { createOpenAiProvider, extractOpenAiOutputText, stripContributionIds, tallySentiment, toStringArray } from "../src/openai";
+import { createOpenAiProvider, extractOpenAiOutputText, stripContributionIds, tallySentiment, toQuestionList, toStringArray } from "../src/openai";
 
 test("reads Responses API message text when output_text is absent", () => {
   const text = extractOpenAiOutputText({
@@ -108,6 +108,66 @@ test("keeps contribution ids in provenance while scrubbing them from the summary
     });
     expect(result.summary).toBe("reported quiet reflection and signaled concern.");
     expect(result.sourceContributionIds).toEqual(["con_0f071d79-5ca6-454f-a6a5-84f8379da9ee"]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("reads a bare top-level array, which is what the model actually returns", () => {
+  expect(toQuestionList(["Where do we agree?", "What pulls against what?"]))
+    .toEqual(["Where do we agree?", "What pulls against what?"]);
+});
+
+test("keeps a bare array response end to end instead of falling back", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async () => new Response(JSON.stringify({
+    output_text: JSON.stringify(["Where do we converge?", "What is in tension?", "What are we missing?", "What will we do?"]),
+  }), { status: 200 })) as unknown as typeof fetch;
+  try {
+    const questions = await createOpenAiProvider({ apiKey: "test-key" }).generateQuestions({
+      summary: "s", themes: ["trust"], tensions: [], sourceContributionIds: ["c1"],
+    });
+    expect(questions).toEqual(["Where do we converge?", "What is in tension?", "What are we missing?", "What will we do?"]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("reads a plain questions array", () => {
+  expect(toQuestionList({ questions: ["Where do we agree?", "What is in tension?"] }))
+    .toEqual(["Where do we agree?", "What is in tension?"]);
+});
+
+test("reads the four questions when the model keys them by role instead", () => {
+  expect(toQuestionList({
+    convergence: { question: "Where do we agree?", groundedIn: ["con_1"] },
+    tension: { question: "What pulls against what?" },
+    blindSpot: "Whose voice is missing?",
+    action: { question: "What will we do differently?" },
+  })).toEqual([
+    "Where do we agree?",
+    "What pulls against what?",
+    "Whose voice is missing?",
+    "What will we do differently?",
+  ]);
+});
+
+test("caps the question list at four and scrubs contribution ids", () => {
+  const questions = toQuestionList({ questions: ["a con_0f071d79-5ca6-454f-a6a5-84f8379da9ee?", "b?", "c?", "d?", "e?"] });
+  expect(questions).toHaveLength(4);
+  expect(questions[0]).toBe("a?");
+});
+
+test("falls back to the mock when the model returns nothing question-shaped", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async () => new Response(JSON.stringify({
+    output_text: JSON.stringify({ notes: "nothing usable here" }),
+  }), { status: 200 })) as unknown as typeof fetch;
+  try {
+    const questions = await createOpenAiProvider({ apiKey: "test-key" }).generateQuestions({
+      summary: "s", themes: ["trust"], tensions: [], sourceContributionIds: ["c1"],
+    });
+    expect(questions[0]).toContain("trust");
   } finally {
     globalThis.fetch = originalFetch;
   }
