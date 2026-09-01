@@ -1,5 +1,11 @@
-import type { AiProvider } from "./provider";
+import type { AiProvider, SynthesisInput } from "./provider";
 import { createMockAiProvider } from "./mock";
+
+export function tallySentiment(contributions: SynthesisInput["contributions"]): Record<string, number> {
+  const sentiment: Record<string, number> = {};
+  for (const item of contributions) sentiment[item.signal] = (sentiment[item.signal] ?? 0) + 1;
+  return sentiment;
+}
 
 export function extractOpenAiOutputText(payload: unknown): string {
   if (!payload || typeof payload !== "object") throw new Error("AI provider returned no structured output");
@@ -54,11 +60,11 @@ export function createOpenAiProvider(config: { apiKey: string; model?: string })
     },
     async synthesize(input) {
       try {
-        const result = await request("Synthesize themes, tensions, weakSignals, sentiment, summary, and exact sourceContributionIds.", input) as unknown as Awaited<ReturnType<AiProvider["synthesize"]>>;
+        const result = await request("Synthesize themes, tensions, weakSignals, summary, and exact sourceContributionIds.", input) as unknown as Awaited<ReturnType<AiProvider["synthesize"]>>;
         if (input.contributions.length > 0 && (!result.sourceContributionIds || result.sourceContributionIds.length === 0)) {
           return fallback.synthesize(input);
         }
-        return result;
+        return { ...result, sentiment: tallySentiment(input.contributions) };
       } catch { return fallback.synthesize(input); }
     },
     async generateQuestions(input) {
