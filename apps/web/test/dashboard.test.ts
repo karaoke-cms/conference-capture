@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
-import { contributionGroups, latestSynthesis, qrUrl, sentimentPercentages } from "../app/utils/dashboard";
+import { contributionGroups, latestSynthesis, qrUrl, sentimentPercentages, sessionAnchor } from "../app/utils/dashboard";
 
 describe("organizer dashboard view model", () => {
   test("groups contributions by session", () => {
@@ -23,6 +23,20 @@ describe("organizer dashboard view model", () => {
   test("constructs a public session URL for QR encoding", () => {
     expect(qrUrl("https://capture.example/", "ai-and-vsm")).toBe("https://capture.example/session/ai-and-vsm");
   });
+
+  test("builds a session anchor the router can use as a CSS selector", () => {
+    expect(sessionAnchor("metaphorum:talk74")).toBe("session-metaphorum-talk74");
+    expect(sessionAnchor("metaphorum:talk74")).toMatch(/^[A-Za-z0-9_-]+$/);
+  });
+});
+
+test("links session panels and contribution deep links through the same anchor helper", async () => {
+  const sessions = await readFile(new URL("../app/pages/organizer/sessions.vue", import.meta.url), "utf8");
+  const contributions = await readFile(new URL("../app/pages/organizer/contributions.vue", import.meta.url), "utf8");
+
+  expect(sessions).toContain(":id=\"sessionAnchor(session.id)\"");
+  expect(contributions).toContain("hash: `#${sessionAnchor(item.sessionId)}`");
+  expect(`${sessions}${contributions}`).not.toContain("session-${");
 });
 
 test("uses the selectable QR print list instead of individual QR cards", async () => {

@@ -23,3 +23,9 @@ export function sentimentPercentages(sentiment: Record<string, number>) {
 export function qrUrl(origin: string, slug: string): string {
   return `${origin.replace(/\/$/, "")}/session/${encodeURIComponent(slug)}`;
 }
+
+// Session ids carry a colon ("metaphorum:talk74"), which is legal in an id but not in a CSS
+// selector, so the router warns when it resolves the hash. Keep anchors selector-safe.
+export function sessionAnchor(sessionId: string): string {
+  return `session-${sessionId.replace(/[^A-Za-z0-9_-]/g, "-")}`;
+}
