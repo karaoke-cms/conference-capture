@@ -54,6 +54,7 @@ export function normalizeMetaphorumProgramme(source: MetaphorumSource): Metaphor
   const conferenceId = "metaphorum-2026";
   const speakers = new Map(source.speakers.map((speaker) => [speaker.id, speaker]));
   const schedule = new Map(source.schedule.map((slot) => [slot.talk_id, slot]));
+  const trackIds = new Set(source.tracks.map((track) => track.id));
   return {
     conference: {
       id: conferenceId,
@@ -66,7 +67,7 @@ export function normalizeMetaphorumProgramme(source: MetaphorumSource): Metaphor
     tracks: source.tracks.map((track, index) => ({
       id: `metaphorum:${track.id}`, sourceId: track.id, conferenceId, title: track.name, order: index + 1,
     })),
-    sessions: source.talks.map((talk) => {
+    sessions: source.talks.filter((talk) => trackIds.has(talk.track_id)).map((talk) => {
       const speaker = speakers.get(talk.speaker_id);
       const slot = schedule.get(talk.id);
       const speakerLine = speaker ? `Speaker: ${speaker.full_name}${speaker.affiliation ? ` — ${speaker.affiliation}` : ""}` : "";
