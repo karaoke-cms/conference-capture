@@ -15,6 +15,7 @@ const sections = computed(() => [
   { to: "/organizer/conference", label: "Whole conference" },
   { to: "/organizer/world-cafe", label: "World Café" },
   { to: "/organizer/qr-codes", label: "Session QR codes" },
+  { to: "/import/sessions", label: "Import sessions" },
 ]);
 </script>
 <template>

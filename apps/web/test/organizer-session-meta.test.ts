@@ -55,9 +55,11 @@ describe("staying signed in when a link opens a new tab", () => {
     expect(gate).toContain("navigateTo(next.value)");
   });
 
-  test("refuses to bounce anywhere but an internal organizer path", async () => {
+  test("refuses to bounce anywhere but an internal token-gated path", async () => {
     const gate = await read("../app/pages/organizer/index.vue");
-    expect(gate).toContain("value.startsWith(\"/organizer\") && !value.startsWith(\"//\")");
+    expect(gate).toContain("!value.startsWith(\"//\")");
+    expect(gate).toContain("gatedPrefixes.some((prefix) => value.startsWith(prefix))");
+    expect(gate).toContain("[\"/organizer\", \"/import\"]");
   });
 });
 

@@ -50,6 +50,16 @@ export function useOrganizerDashboard() {
     queued.value = new Set([...queued.value].filter((item) => item !== key));
   }
 
+  async function importSessions() {
+    const response = await fetch(`${config.public.apiBase}/api/organizer/import-sessions`, {
+      method: "POST", headers: { authorization: `Bearer ${token.value}` },
+    });
+    if (!response.ok) throw new Error("The sessions could not be imported.");
+    const result = await response.json() as { tracks: number; sessions: number; scheduled: number; removedDemoSessions: number };
+    await load();
+    return result;
+  }
+
   const conference = computed(() => dashboard.value?.conferences[0]);
   const conferenceSynthesis = computed(() => conference.value && dashboard.value ? latestSynthesis(dashboard.value.syntheses, "conference", conference.value.id) : undefined);
   const questions = computed(() => conferenceSynthesis.value?.questions ?? []);
@@ -58,5 +68,5 @@ export function useOrganizerDashboard() {
     return dashboard.value?.sessions.find((session) => session.id === sessionId)?.title ?? "Unknown session";
   }
 
-  return { token, dashboard, error, loading, queued, restoreToken, load, generate, conference, conferenceSynthesis, questions, sessionTitle };
+  return { token, dashboard, error, loading, queued, restoreToken, load, generate, importSessions, conference, conferenceSynthesis, questions, sessionTitle };
 }
