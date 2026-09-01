@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { contributionGroups, latestSynthesis } from "../../utils/dashboard";
+import { contributionGroups, latestSynthesis, sessionAnchor } from "../../utils/dashboard";
 
 const { dashboard, queued, generate } = useOrganizerDashboard();
 
@@ -25,7 +25,7 @@ const filtered = computed(() => {
     <div class="section-heading"><p class="eyebrow">Recursive level 01</p><h2 class="display">Sessions</h2></div>
     <label class="search"><span>Search sessions</span><input v-model="search" type="search" placeholder="Session title…" /></label>
     <div v-if="filtered.length" class="scope-grid">
-      <ScopePanel v-for="session in filtered" :id="`session-${session.id}`" :key="session.id" label="Session synthesis" :title="session.title" scope-type="session" :scope-id="session.id" :synthesis="latestSynthesis(dashboard.syntheses, 'session', session.id)" :busy="queued.has('session:' + session.id)" :contribution-count="countsFor(session.id).contributions" :photo-count="countsFor(session.id).photos" :contributions-href="`/organizer/contributions?session=${encodeURIComponent(session.id)}`" @generate="generate" />
+      <ScopePanel v-for="session in filtered" :id="sessionAnchor(session.id)" :key="session.id" label="Session synthesis" :title="session.title" scope-type="session" :scope-id="session.id" :synthesis="latestSynthesis(dashboard.syntheses, 'session', session.id)" :busy="queued.has('session:' + session.id)" :contribution-count="countsFor(session.id).contributions" :photo-count="countsFor(session.id).photos" :contributions-href="`/organizer/contributions?session=${encodeURIComponent(session.id)}`" @generate="generate" />
     </div>
     <p v-else class="empty">No sessions match that search.</p>
   </section>

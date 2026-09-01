@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { sessionAnchor } from "../../utils/dashboard";
+
 const { dashboard, sessionTitle } = useOrganizerDashboard();
 const route = useRoute();
 
@@ -22,7 +24,7 @@ const filtered = computed(() => {
     <div v-if="filtered.length" class="contributions">
       <div v-for="item in filtered" :key="item.id" class="contribution">
         <ContributionCard :contribution="item" />
-        <NuxtLink :to="{ path: '/organizer/sessions', hash: `#session-${item.sessionId}` }" class="session-link">{{ sessionTitle(item.sessionId) }} →</NuxtLink>
+        <NuxtLink :to="{ path: '/organizer/sessions', hash: `#${sessionAnchor(item.sessionId)}` }" class="session-link">{{ sessionTitle(item.sessionId) }} →</NuxtLink>
       </div>
     </div>
     <p v-else class="empty">No contributions match that search.</p>
