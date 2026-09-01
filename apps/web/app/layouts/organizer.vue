@@ -5,7 +5,7 @@ const route = useRoute();
 onMounted(async () => {
   restoreToken();
   if (!dashboard.value && token.value && !loading.value) await load();
-  if (!dashboard.value && route.path !== "/organizer") await navigateTo("/organizer");
+  if (!dashboard.value && route.path !== "/organizer") await navigateTo({ path: "/organizer", query: { next: route.fullPath } });
 });
 
 const sections = computed(() => [
