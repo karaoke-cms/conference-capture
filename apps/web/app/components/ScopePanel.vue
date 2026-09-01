@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ScopeType, Synthesis } from "@conference/contracts";
-defineProps<{ label: string; title: string; scopeType: ScopeType; scopeId: string; synthesis?: Synthesis; busy?: boolean }>();
+defineProps<{ label: string; title: string; scopeType: ScopeType; scopeId: string; synthesis?: Synthesis; busy?: boolean; contributionCount?: number; photoCount?: number; contributionsHref?: string }>();
 defineEmits<{ generate: [scopeType: ScopeType, scopeId: string] }>();
 </script>
 <template>
@@ -17,6 +17,11 @@ defineEmits<{ generate: [scopeType: ScopeType, scopeId: string] }>();
       <p class="provenance">Grounded in {{ synthesis.sourceContributionIds.length }} source contribution{{ synthesis.sourceContributionIds.length === 1 ? "" : "s" }}.</p>
     </template>
     <p v-else class="empty">No synthesis has been generated for this scope.</p>
+    <footer v-if="contributionCount !== undefined">
+      <span>{{ contributionCount }} contribution{{ contributionCount === 1 ? "" : "s" }}</span>
+      <span v-if="photoCount">{{ photoCount }} photo{{ photoCount === 1 ? "" : "s" }}</span>
+      <a v-if="contributionsHref" :href="contributionsHref" target="_blank" rel="noopener">Contributions ↗</a>
+    </footer>
   </article>
 </template>
 <style scoped>
@@ -32,5 +37,8 @@ ul { display: flex; flex-wrap: wrap; gap: .4rem; margin: 0; padding: 0; list-sty
 li { padding: .35rem .55rem; border: 1px solid var(--rule); font-size: .78rem; }
 .signals li { border-color: color-mix(in srgb, var(--signal) 45%, transparent); color: #8a321c; }
 .provenance, .empty { margin: 0; color: var(--muted); font-size: .75rem; }
+footer { display: flex; flex-wrap: wrap; gap: .8rem; align-items: baseline; padding-top: .9rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: .75rem; font-weight: 750; }
+footer a { margin-left: auto; color: var(--moss); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
 @media (max-width: 35rem) { .columns { grid-template-columns: 1fr; } }
 </style>
